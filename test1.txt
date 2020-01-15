@@ -1,0 +1,12 @@
+int main()
+{
+    int n, fact, i;
+    fact = 1;
+    n = 5;
+    i = 1;
+    float y = 100.0;
+    while (i <= n) {
+        fact = fact*i;
+        i = i+1;
+    }
+}
