@@ -94,6 +94,10 @@ void insert_into_constant_table(char *value, char *type, int type_code){
             {
                 case DECIMAL: cTable[hash_value].integer_value = atoi(value); break;
                 case REAL: cTable[hash_value].double_value = strtof(value,NULL); break;
+                case STRING:
+                    cTable[hash_value].string_value = (char *)malloc(strlen(value)*sizeof(char)); 
+                    strcpy(cTable[hash_value].string_value,value); 
+                    break;
                 default: break;
             }
             return;
@@ -114,6 +118,9 @@ void insert_into_constant_table(char *value, char *type, int type_code){
         {
             case DECIMAL: cTable[pos].integer_value = atoi(value); break;
             case REAL: cTable[pos].double_value = strtof(value,NULL); break;
+            case STRING:
+                cTable[pos].string_value = (char *)malloc(strlen(value)*sizeof(char));      
+                strcpy(cTable[pos].string_value,value); break;
             default: break;
         }
     }
@@ -134,7 +141,9 @@ void print_constant_table(){
                 printf ("%s\t-\t%s\t-\t%d\n",cTable[i].name, cTable[i].type, cTable[i].integer_value);
             } else if (cTable[i].double_value != INFINITY){
                 printf ("%s\t-\t%s\t\t-\t%0.3f\n",cTable[i].name, cTable[i].type, cTable[i].double_value);
-            } 
+            } else if (cTable[i].string_value != NULL){
+                printf ("%s\t-\t%s\t\t-\t%s\n",cTable[i].name, cTable[i].type, cTable[i].string_value);
+            }
         }
     }
 }
@@ -182,6 +191,18 @@ int main(){
                 printf("%s\t-\tREAL CONSTANT\n",yylVal.string); 
                 insert_into_constant_table(yylVal.string,"REAL CONSTANT", REAL);
                 break;
+            case STRING:
+                printf("%s\t-\tSTRING CONSTANT\n",yylVal.string);
+                insert_into_constant_table(yylVal.string, "STRING CONSTANT", STRING);
+                break;
+            case PREPROCESSOR_DIRECTIVE:
+                printf("%s\t-\tPREPROCESSOR DIRECTIVE\n", yylVal.string);
+                break;
+            case SLC:
+                printf("%s\t-\tSINGLE LINE COMMENT\n",yylVal.string);
+                break;
+            case MLC:
+                printf("%s\t-\tMULTI LINE COMMENT\n",yylVal.string);
             default: break;
         }
     }
