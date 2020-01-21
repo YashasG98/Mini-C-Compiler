@@ -115,7 +115,7 @@ SINGLE_LINE_COMMENT [/][/]([\"]|{STRING})*
 }
 <COMMENT>. {printf ("%s",yytext);}
 <COMMENT>\n { printf("\n"); ++line_count; }
-<COMMENT>"/*" { printf ("%s\t\t\t[WARNING: Beginning nested comment]", yytext); }
+<COMMENT>"/*" { printf ("%s[WARNING: Beginning nested comment]", yytext); }
 <COMMENT>"*/" { BEGIN INITIAL; printf("%s\"\t- MULTI LINE COMMENT\n",yytext); }
 <COMMENT><<EOF>> {printf ("ERROR: Comment not closed at line no.%d\n​ ",line_count+1);return 0;}
 .*"*/".* { printf ("\nERROR: Closing Comment wrongly at %d line\n", line_count); }

@@ -161,10 +161,10 @@ int main(){
         switch (s)
         {
             case ';':
-                printf(";\t-\tSEMICOLON DELIMITER\n",yylVal.string); 
+                printf(";\t-\tSEMICOLON DELIMITER\n"); 
                 break;
             case ',':
-                printf(",\t-\tCOMMA DELIMITER\n",yylVal.string); 
+                printf(",\t-\tCOMMA DELIMITER\n"); 
                 break;
             case KEYWORD: 
                 printf("%s\t-\tKEYWORD\n",yylVal.string); 
@@ -213,12 +213,12 @@ int main(){
             default: break;
         }
     }
-    printf ("=====================================================\n");
+    printf ("==============================================\n");
     printf("\n\t\tSYMBOL TABLE\n\n");
     printf("\tLexemme\t\t\tType\n\n");
     print_symbol_table();
     printf("\n\n");
-    printf ("=====================================================\n");
+    printf ("================================================\n");
     printf("\n\t\tCONSTANT TABLE \n\n");
     printf("  Type of Constant\t\tConstant\n\n");
     print_constant_table();
