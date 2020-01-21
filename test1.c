@@ -6,13 +6,10 @@
     This program is used for testing the scanner
     The program has a simple while loop to count to n
 */
-
 int main(){
-    int n, i = 1;
-    scanf("%d",&n);
-    while(i<=n){
-        printf("%d ",i);
-        i = i+1;
+    char s[10]="abcd";
+    for(int i=0;i<5;i++){
+        printf("hello");
+        printf("incomplete);
     }
-    return 0;
 }
