@@ -22,6 +22,12 @@ int main(){
             case '}':
                 printf("}\t- Closing Braces\n");
                 break;
+            case '[':
+                printf("[\t- Opening Square Bracket\n");
+                break;
+            case ']':
+                printf("]\t- Closing Square Bracket\n");
+                break;
             case ';':
                 printf(";\t- Semicolon Delimiter\n");
                 break;

@@ -64,6 +64,8 @@ auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for
 \)              {return (int)')';}
 \{              {return (int)'{';}
 \}              {return (int)'}';}
+\[              {return (int)'[';}
+\]              {return (int)']';}
 ;               {return (int)';';}
 ,               {return (int)',';}
 {OPERATOR}      {   

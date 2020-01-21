@@ -9,10 +9,10 @@ scanf("%d", &n);
 fact=1;
 float x = 1.1;
 /*hey
-helo/*
+helo
 whatsup*/
 for(i=1; i<=n; ++i) fact = fact*i;
-printf("%d!=%d\n", n, fact);
+printf("%d!\"=%d\n", n, fact);
 return 0;
 }
 
