@@ -79,6 +79,18 @@ SINGLE_LINE_COMMENT [/][/]([\"]|{STRING})*
     yylVal.string[yyleng+1]='\0';
     return IDENTIFIER;
 }
+{DECI}[\.]{DECI}[\.](.)*    {
+      printf ("ERROR: Illegal floating point constant at line %d\n​ ",line_count+1);return 0;  
+}
+[\'](.)[\']     {
+    yylVal.string = (char *)malloc((yyleng+1)*sizeof(char));
+    strncpy(yylVal.string,yytext,yyleng+1);
+    yylVal.string[yyleng+1]='\0';
+    return CHARACTER_CONSTANT;
+}
+[\'](.)(.)+[\']     {
+    printf ("ERROR: Illegal character constant at line %d\n​ ",line_count+1);return 0;
+}
 {DECI} {
     yylVal.string = (char *)malloc((yyleng+1)*sizeof(char));
     strncpy(yylVal.string,yytext,yyleng+1);
