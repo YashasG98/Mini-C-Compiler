@@ -16,6 +16,7 @@
 #define NEWLINE 310
 #define PREPROCESSOR_DIRECTIVE 311
 #define SLC 312
+#define CHARACTER_CONSTANT 314
 
 typedef union {
     char *string;
