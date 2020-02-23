@@ -83,7 +83,7 @@ void insert_into_symbol_table(char *symbol, char *type){
 }
 
 void insert_into_constant_table(char *value, char *type, int type_code){
-    if(lookup_symbol_table(value)) return;
+    if(lookup_constant_table(value)) return;
     else {
         int hash_value = hash(value);
         if(cTable[hash_value].length == 0){
@@ -147,7 +147,9 @@ void print_constant_table(){
         }
     }    
 }
+
 extern yylType yylVal;
+
 int main(){
     int s;
     for(int i=0;i<1001;i++){
