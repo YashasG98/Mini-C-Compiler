@@ -2,6 +2,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
+    #include <stdbool.h>
     void yyerror(const char *s);
     int yylex();
 
@@ -9,8 +10,39 @@
     extern char current_scope[35];
     extern char current_data_type[20];
     extern char current_value[20];
+    extern int current_opening_brace_line_no;
+    extern int current_closing_brace_line_no;
     extern int current_line_no;
+    extern int lex_error;
     
+    // Stack
+    int stack[100];
+    int top = -1;
+
+    void push(int x){
+        if (top == 100){
+            return;
+        } else {
+            stack[++top] = x;
+        }
+    }
+
+    int pop(){
+        if (top == -1){
+            return -1;
+        } else {
+            return stack[top--];
+        }
+    }
+
+    int peek(){
+        if (top == -1){
+            return -1;
+        } else {
+            return stack[top];
+        }
+    }
+
     // Hash function
     int hash(char *);
 
@@ -20,6 +52,8 @@
         char type[100];
         char scope[100];
         char value[100];
+        int opening_boundary_line_no;
+        int closing_boundary_line_no;
         int length;
         int line_no;
     } symbolTable;
@@ -28,7 +62,9 @@
 
     int lookup_symbol_table(char *str){
         int value = hash(str);
-        if (sTable[value].length == 0) return 0;
+        if (sTable[value].length == 0) {
+            return 0;
+        }
         else if(strcmp(sTable[value].name,str) == 0) {
             if (strcmp(sTable[value].scope, current_scope) == 0)
                 return 1;
@@ -43,7 +79,9 @@
         }
     }
 
-    void insert_into_symbol_table(char *symbol, char *type, char *scope, int line_no){
+    void insert_into_symbol_table(char *symbol, char *type, 
+                                  char *scope, int line_no,
+                                  int opening_boundary_line_no) {
         if(lookup_symbol_table(symbol)) return;
         else {
             int value = hash(symbol);
@@ -53,6 +91,7 @@
                 strcpy(sTable[value].scope, scope);
                 sTable[value].length = strlen(symbol);
                 sTable[value].line_no = line_no;
+                sTable[value].opening_boundary_line_no = opening_boundary_line_no;
                 return;
             }
             int pos = 0;
@@ -69,15 +108,28 @@
             strcpy(sTable[pos].scope, scope);
             sTable[pos].line_no = line_no;
             sTable[pos].length = strlen(symbol);
+            sTable[pos].opening_boundary_line_no = opening_boundary_line_no;
         }
     }
 
     void insert_into_symbol_table_value(char *identifier, char *value, char *scope){
         for(int i=0;i<1001;i++){
             if ((strcmp(sTable[i].name, identifier) == 0) 
-                    && (strcmp (sTable[i].scope, scope) == 0)){
-                strcpy(sTable[i].value,value);
-                return;
+                    && (strcmp (sTable[i].scope, scope) == 0)
+                    && (sTable[i].value[0] == '\0')) {
+                    strcpy(sTable[i].value,value);
+                    return;
+            }
+        }
+    }
+
+    void insert_into_symbol_table_closing_line(char *scope, 
+                                               int opening_boundary_line_no,
+                                               int closing_boundary_line_no) {
+        for(int i=0;i<1001;i++){
+            if ( (strcmp (sTable[i].scope, scope) == 0)
+                    && sTable[i].opening_boundary_line_no == opening_boundary_line_no){
+                sTable[i].closing_boundary_line_no = closing_boundary_line_no;
             }
         }
     }
@@ -85,7 +137,7 @@
     void print_symbol_table(){
         for(int i=0;i<1001;i++){
             if(sTable[i].length == 0) continue;
-            printf("  %s\t\t%s\t%s\t%s\t%d\n",sTable[i].name, sTable[i].type, sTable[i].scope, sTable[i].value, sTable[i].line_no);
+            printf("  %s\t\t%s\t%s\t%s\t%d-%d\t%d\n",sTable[i].name, sTable[i].type, sTable[i].scope, sTable[i].value, sTable[i].opening_boundary_line_no, sTable[i].closing_boundary_line_no, sTable[i].line_no);
         }
     }
 
@@ -169,10 +221,6 @@
         }
     }
 
-    // TODO LIST:
-    // printf, scanf
-    // Error stuff
-
 %}
 
 %define parse.lac full
@@ -223,13 +271,19 @@ user_defined_fn_decl : user_defined_fn_decl global_fn_decl
 
 // Statements defn
 
-compound_statement : '{' local_decl statement_list '}' ;
+compound_statement : '{' { push(current_opening_brace_line_no); }
+local_decl statement_list '}' {
+    if (peek() != -1) {
+        int opening_boundary_line_no = pop();
+        insert_into_symbol_table_closing_line(current_scope, opening_boundary_line_no, current_closing_brace_line_no); 
+    }
+};
 
 statements : compound_statement 
            | looping_constructs 
-           | expn_statement 
+           | expn_statement  
            | selection_statement 
-           | labelled_statement
+           | labelled_statement 
            | return_statement
            | break_statement  
            | io_statements;
@@ -320,7 +374,7 @@ postfix_expn : primary_expn
              | postfix_expn DECREMENT_OPERATOR ;
 
 primary_expn : IDENTIFIER   { 
-        insert_into_symbol_table(current_identifier, current_data_type, current_scope, current_line_no); 
+        insert_into_symbol_table(current_identifier, current_data_type, current_scope, current_line_no+1, current_opening_brace_line_no); 
     }  
              | INTEGER_CONSTANT {
         insert_into_symbol_table_value (current_identifier, current_value, current_scope);
@@ -346,7 +400,7 @@ data_type : INT
 void print_constant_table();
 
 void yyerror (const char *s){
-    printf ("ERROR: %s\n", s);
+    printf ("ERROR: %s at line %d\n", s, current_line_no);
 }
 
 int main(){
@@ -355,7 +409,7 @@ int main(){
         printf("\nSUCCESS\n");
         printf ("\n=================================================\n");
         printf ("\n\t\tSYMBOL TABLE \n\n");
-        printf ("  Symbol\tType\tScope\tValue\tLine No\n");
+        printf ("  Symbol\tType\tScope\tValue\tBound\tLine No\n");
         print_symbol_table();
         printf ("\n=================================================\n");
         printf ("\n");

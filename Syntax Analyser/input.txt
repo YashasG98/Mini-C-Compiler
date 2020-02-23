@@ -1,9 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int max(int a, float b){
-    printf ("Hi Hello", a, b);
+int max(int a, float b) {
+    int a = 10;
+    if (x) {
+        float b = 9;
+        int y;
+    }
 }
 
 int main() {
+    int c;
+    do {
+        int d;
+    } while (!n);
 }

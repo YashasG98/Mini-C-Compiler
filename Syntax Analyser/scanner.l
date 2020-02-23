@@ -6,7 +6,7 @@
     #include <string.h>
     void yyerror(char *s);
     #include "y.tab.h"
-    int line_count = 0;
+    int line_count = 1;
 
     // Hash function
     int hash(char *str){
@@ -130,7 +130,11 @@
     char current_data_type[20];
     char current_value[20];
     int current_line_no;
+    int current_opening_brace_line_no;
+    int current_closing_brace_line_no;
 %}
+
+%x COMMENT
 
 WHITESPACES [ \t]+
 ALPHA [a-zA-Z]
@@ -147,21 +151,32 @@ ADD_OP "+"|"-"
 MUL_OP "*"|"/"|"%"
 STRING_CONSTANT \"(.)*\"
 PRE_PROCESSOR_DIRECTIVE (#define[ \t]*([a-zA-Z0-9]+)[ \t]([a-zA-Z0-9]+))|(#include[ \t]*<{ALPHA}*.h>)|(#include[ \t]*"{ALPHA}*.h")
+SINGLE_LINE_COMMENT "//"(.)*
 
 %%
 
 {WHITESPACES} ;
-[,;{}():] return *yytext;
+[,;():] return *yytext;
+"{" {
+    current_opening_brace_line_no = line_count;
+    return *yytext;
+}
+"}" {
+    current_closing_brace_line_no = line_count;
+    return *yytext;
+}
 {PRE_PROCESSOR_DIRECTIVE} {return PRE_PROCESSOR_DIRECTIVE;}
+{SINGLE_LINE_COMMENT} ;
 [-+]?{DECI} {
-    insert_into_constant_table(yytext,"INTEGER CONSTANT",INTEGER_CONSTANT,line_count+1);
+    insert_into_constant_table(yytext,"INTEGER CONSTANT",INTEGER_CONSTANT,line_count);
     strcpy(current_value, yytext);
     return INTEGER_CONSTANT;
 }
 [-+]?{REAL} {
-    insert_into_constant_table(yytext,"REAL CONSTANT",REAL_CONSTANT,line_count+1);
+    insert_into_constant_table(yytext,"REAL CONSTANT",REAL_CONSTANT,line_count);
     return REAL_CONSTANT;
 }
+[<<]|[>>] {return SHIFT_OP;}
 {EQUALITY_OPERATORS} {return EQUALITY_OP;}
 {RELATIONAL_OPERATORS} {return REL_OP;}
 {ASSIGNMENT_OPERATORS} {return ASSIGN_OP;}
@@ -171,7 +186,7 @@ PRE_PROCESSOR_DIRECTIVE (#define[ \t]*([a-zA-Z0-9]+)[ \t]([a-zA-Z0-9]+))|(#inclu
 {ADD_OP} {return ADD_OP;}
 {MUL_OP} {return MUL_OP;}
 {STRING_CONSTANT} {
-    insert_into_constant_table (yytext, "STRING_CONSTANT", STRING_CONSTANT, line_count+1);
+    insert_into_constant_table (yytext, "STRING_CONSTANT", STRING_CONSTANT, line_count);
     return STRING_CONSTANT;
 }
 
@@ -209,10 +224,28 @@ PRE_PROCESSOR_DIRECTIVE (#define[ \t]*([a-zA-Z0-9]+)[ \t]([a-zA-Z0-9]+))|(#inclu
 
 {IDENTIFIER} {
     strcpy(current_identifier,yytext); 
-    current_line_no = line_count + 1;
     return IDENTIFIER;
 }
-[\n] {++line_count;}
+[\n] {
+    current_line_no = line_count;
+    line_count++;
+}
+
+"/*" { BEGIN COMMENT; }
+<COMMENT>. ; 
+<COMMENT>\n {line_count++;}
+<COMMENT>"/*" {printf ("warning: beginning nested comment on line %d", line_count);}
+<COMMENT>"*/" { BEGIN INITIAL; }
+<COMMENT><<EOF>> { yyerror("Comment left unclosed"); return 0;}
+"*/".* {yyerror("Unopened comment closed wrongly"); return 0;}
+{DECI}+[.]?({ALPHA}|{DECI})* {yyerror("Illegal Identifier"); return 0;}
+
+(.?) {
+    if (yytext[0] == '#') yyerror("Incomplete Pre-processor-directive");
+    else if (yytext[0] == '"') yyerror ("Unclosed string");
+    else yyerror (NULL);
+    return 0;   
+}
 
 %%
 int yywrap(void) {return 1;}
