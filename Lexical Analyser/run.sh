@@ -1,7 +1,7 @@
 # !/bin/bash
 
-lex $1
+lex scanner.l
 cc -Wall -c lex.yy.c
 cc -Wall driver_code.c lex.yy.o
-./a.out < test_cases/test5.c
+./a.out < $1
 rm lex.yy.o lex.yy.c a.out

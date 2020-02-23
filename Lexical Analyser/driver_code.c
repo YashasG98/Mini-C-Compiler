@@ -206,6 +206,10 @@ int main(){
                 printf("%s\t-\tSTRING CONSTANT\n",yylVal.string);
                 insert_into_constant_table(yylVal.string, "STRING CONSTANT", STRING);
                 break;
+            case CHARACTER_CONSTANT:
+                printf("%s\t-\tCHARACTER CONSTANT\n",yylVal.string);
+                insert_into_constant_table(yylVal.string, "CHARACTER CONSTANT", STRING);
+                break;
             case PREPROCESSOR_DIRECTIVE:
                 printf("%s\t-\tPREPROCESSOR DIRECTIVE\n", yylVal.string);
                 break;

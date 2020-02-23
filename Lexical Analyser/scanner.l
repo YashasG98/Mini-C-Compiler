@@ -79,6 +79,18 @@ SINGLE_LINE_COMMENT [/][/]([\"]|{STRING})*
     yylVal.string[yyleng+1]='\0';
     return IDENTIFIER;
 }
+{DECI}[\.]{DECI}[\.](.)*    {
+      printf ("ERROR: Illegal floating point constant at line %d\n​ ",line_count+1);return 0;  
+}
+[\'](.)[\']     {
+    yylVal.string = (char *)malloc((yyleng+1)*sizeof(char));
+    strncpy(yylVal.string,yytext,yyleng+1);
+    yylVal.string[yyleng+1]='\0';
+    return CHARACTER_CONSTANT;
+}
+[\'](.)(.)+[\']     {
+    printf ("ERROR: Illegal character constant at line %d\n​ ",line_count+1);return 0;
+}
 {DECI} {
     yylVal.string = (char *)malloc((yyleng+1)*sizeof(char));
     strncpy(yylVal.string,yytext,yyleng+1);
@@ -117,15 +129,15 @@ SINGLE_LINE_COMMENT [/][/]([\"]|{STRING})*
 <COMMENT>\n { printf("\n"); ++line_count; }
 <COMMENT>"/*" { printf ("%s[WARNING: Beginning nested comment]", yytext); }
 <COMMENT>"*/" { BEGIN INITIAL; printf("%s\"\t- MULTI LINE COMMENT\n",yytext); }
-<COMMENT><<EOF>> {printf ("ERROR: Comment not closed at line no.%d\n​ ",line_count+1);return 0;}
-.*"*/".* { printf ("\nERROR: Closing Comment wrongly at %d line\n", line_count); }
+<COMMENT><<EOF>> {printf ("ERROR: Comment not closed at line %d\n​ ",line_count+1);return 0;}
+.*"*/".* { printf ("\nERROR: Closing Comment wrongly at line %d\n", line_count); }
 {DECI}+[.]?({ALPHA}|{DECI})+ {
-    printf ("ERROR: Illegal Identifier at %d line\n", line_count);
+    printf ("ERROR: Illegal Identifier at %d line\n", line_count+1);
 }
 (.?) {
         if(yytext[0]=='#')
         {
-        printf("​ ERROR: Pre-Processor directive at line no.%d\n​ ",line_count);
+        printf("​ ERROR: Pre-Processor directive at line no.%d\n​ ",line_count+1);
         }
         else if(yytext[0]=='/')
         {
@@ -133,7 +145,7 @@ SINGLE_LINE_COMMENT [/][/]([\"]|{STRING})*
         }
         else if(yytext[0]=='"')
         {
-        printf(" ERROR: Incomplete string at line no.%d\n",line_count+1);
+        printf(" ERROR: Incomplete string at line no.%d\n",line_count+2);
         }
         else
         {
