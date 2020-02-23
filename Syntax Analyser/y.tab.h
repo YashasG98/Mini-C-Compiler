@@ -77,7 +77,9 @@ extern int yydebug;
     CASE = 287,
     SWITCH = 288,
     INCREMENT_OPERATOR = 289,
-    DECREMENT_OPERATOR = 290
+    DECREMENT_OPERATOR = 290,
+    PRINTF = 291,
+    SCANF = 292
   };
 #endif
 /* Tokens.  */
@@ -114,6 +116,8 @@ extern int yydebug;
 #define SWITCH 288
 #define INCREMENT_OPERATOR 289
 #define DECREMENT_OPERATOR 290
+#define PRINTF 291
+#define SCANF 292
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED

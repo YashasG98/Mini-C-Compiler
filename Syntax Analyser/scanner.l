@@ -58,14 +58,18 @@
                 {
                     case INTEGER_CONSTANT: cTable[hash_value].integer_value = atoi(value); 
                                            cTable[hash_value].double_value = INFINITY;
+                                           cTable[hash_value].string_value = NULL;
                                            break;
                     case REAL_CONSTANT: cTable[hash_value].double_value = strtof(value,NULL); 
                                         cTable[hash_value].integer_value = INT_MAX;
+                                        cTable[hash_value].string_value = NULL;
                                         break;
-                    // case STRING_CONSTANT:
-                    //     cTable[hash_value].string_value = (char *)malloc(strlen(value)*sizeof(char)); 
-                    //     strcpy(cTable[hash_value].string_value,value); 
-                    //     break;
+                    case STRING_CONSTANT:
+                        cTable[hash_value].string_value = (char *)malloc(strlen(value)*sizeof(char)); 
+                        strcpy(cTable[hash_value].string_value,value); 
+                        cTable[hash_value].integer_value = INT_MAX;
+                        cTable[hash_value].double_value = INFINITY;
+                        break;
                     default: break;
                 }
                 return;
@@ -85,11 +89,22 @@
             cTable[pos].line_no = line_no;
             switch (type_code)
             {
-                case INTEGER_CONSTANT: cTable[pos].integer_value = atoi(value); break;
-                case REAL_CONSTANT: cTable[pos].double_value = strtof(value,NULL); break;
-                // case STRING:
-                //     cTable[pos].string_value = (char *)malloc(strlen(value)*sizeof(char));      
-                //     strcpy(cTable[pos].string_value,value); break;
+                case INTEGER_CONSTANT: 
+                    cTable[pos].integer_value = atoi(value); 
+                    cTable[hash_value].double_value = INFINITY;
+                    cTable[hash_value].string_value = NULL;
+                    break;
+                case REAL_CONSTANT: 
+                    cTable[pos].double_value = strtof(value,NULL); 
+                    cTable[pos].integer_value = INT_MAX;
+                    cTable[pos].string_value = NULL;
+                    break;
+                case STRING_CONSTANT:
+                    cTable[pos].string_value = (char *)malloc(strlen(value)*sizeof(char));      
+                    strcpy(cTable[pos].string_value,value); 
+                    cTable[pos].integer_value = INT_MAX;
+                    cTable[pos].double_value = INFINITY;
+                    break;
                 default: break;
             }
         }
@@ -104,7 +119,7 @@
                 } else if (cTable[i].double_value != INFINITY){
                     printf ("  %d\t\t%s\t\t%lf\n", cTable[i].line_no, cTable[i].type, cTable[i].double_value);
                 } else if (cTable[i].string_value != NULL){
-                    printf ("  %d\t\t%s\t%s\n", cTable[i].line_no, cTable[i].type, cTable[i].string_value);
+                    printf ("  %d\t\t%s\t\t%s\n", cTable[i].line_no, cTable[i].type, cTable[i].string_value);
                 }
             }
         }    
@@ -130,6 +145,7 @@ DECREMENT_OPERATOR "--"
 UNARY_OPERATORS "&"|"~"|"!"
 ADD_OP "+"|"-"
 MUL_OP "*"|"/"|"%"
+STRING_CONSTANT \"(.)*\"
 PRE_PROCESSOR_DIRECTIVE (#define[ \t]*([a-zA-Z0-9]+)[ \t]([a-zA-Z0-9]+))|(#include[ \t]*<{ALPHA}*.h>)|(#include[ \t]*"{ALPHA}*.h")
 
 %%
@@ -154,6 +170,10 @@ PRE_PROCESSOR_DIRECTIVE (#define[ \t]*([a-zA-Z0-9]+)[ \t]([a-zA-Z0-9]+))|(#inclu
 {UNARY_OPERATORS} {return UNARY_OP;}
 {ADD_OP} {return ADD_OP;}
 {MUL_OP} {return MUL_OP;}
+{STRING_CONSTANT} {
+    insert_into_constant_table (yytext, "STRING_CONSTANT", STRING_CONSTANT, line_count+1);
+    return STRING_CONSTANT;
+}
 
 "&&" {return LOG_AND;}
 "||" {return LOG_OR;}
@@ -184,6 +204,8 @@ PRE_PROCESSOR_DIRECTIVE (#define[ \t]*([a-zA-Z0-9]+)[ \t]([a-zA-Z0-9]+))|(#inclu
 "switch" {return SWITCH;}
 "case" {return CASE;}
 "default" {return DEFAULT;}
+"printf" {return PRINTF;}
+"scanf" {return SCANF;}
 
 {IDENTIFIER} {
     strcpy(current_identifier,yytext); 

@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int a, b;
 int max(int a, float b){
-    int a = 10, x, y, z;
+    printf ("Hi Hello", a, b);
 }
 
 int main() {
-    int alpha, beta, gamma;
 }

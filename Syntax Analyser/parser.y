@@ -17,7 +17,7 @@
     // Symbol Table Defintions
     typedef struct symbolTable {
         char name[100];
-        char [100];
+        char type[100];
         char scope[100];
         char value[100];
         int length;
@@ -183,7 +183,7 @@
 %token REAL_CONSTANT INTEGER_CONSTANT STRING_CONSTANT CHAR_CONSTANT
 %token IF ELSE NOT_OP FOR WHILE DO LOG_AND LOG_OR EQUALITY_OP REL_OP SHIFT_OP
 %token ADD_OP MUL_OP ASSIGN_OP UNARY_OP RETURN BREAK DEFAULT CASE SWITCH
-%token INCREMENT_OPERATOR DECREMENT_OPERATOR
+%token INCREMENT_OPERATOR DECREMENT_OPERATOR PRINTF SCANF
 %start program
 
 %%
@@ -192,7 +192,7 @@
 
 program : pre_processor_section global_decl main_fn user_defined_fn_decl;
 
-pre_processor_section : assignment_expn
+pre_processor_section : 
                       | pre_processor_section PRE_PROCESSOR_DIRECTIVE ;
 
 global_decl : { strcpy(current_scope, "global"); }
@@ -231,7 +231,20 @@ statements : compound_statement
            | selection_statement 
            | labelled_statement
            | return_statement
-           | break_statement ;
+           | break_statement  
+           | io_statements;
+
+io_statements : printf_statement 
+              | scanf_statement ;
+
+printf_statement : PRINTF '(' STRING_CONSTANT ',' printf_args ')' ';' 
+                 | PRINTF '(' STRING_CONSTANT ')' ';' ;
+
+printf_args : printf_args ',' assignment_expn | assignment_expn ;
+
+scanf_statement : SCANF '(' STRING_CONSTANT ',' scanf_args ')' ';'
+
+scanf_args : scanf_args ',' unary_expn | unary_expn ;
 
 local_decl : local_decl variable_decl 
            | ; 
@@ -276,12 +289,12 @@ assignment_expn : cond_exp
 
 cond_exp : logical_or_expn ;
 
-assignment_expn
-assignment_expnd_expn ;
-assignment_expn
-assignment_expn
-assignment_expny_expn ;
-assignment_expn
+logical_or_expn : logical_and_expn
+                | logical_or_expn LOG_OR logical_and_expn ;
+
+logical_and_expn : equality_expn
+                 | logical_and_expn LOG_AND equality_expn ;
+
 equality_expn : relational_expn 
               | equality_expn EQUALITY_OP relational_expn ;
 
