@@ -40,7 +40,7 @@
             return stack[top];
         }
     }
-    
+
     // TODO:
     // Function calls, arrays, char constant
 
@@ -197,7 +197,7 @@ postfix_expn : primary_expn
              | postfix_expn DECREMENT_OPERATOR ;
 
 primary_expn : IDENTIFIER   { 
-        insert_into_symbol_table(current_identifier, current_data_type, current_scope, current_line_no+1, current_opening_brace_line_no); 
+        insert_into_symbol_table(current_identifier, current_data_type, current_scope, current_line_no, current_opening_brace_line_no); 
     }  
              | INTEGER_CONSTANT 
              | REAL_CONSTANT 

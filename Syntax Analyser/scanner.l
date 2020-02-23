@@ -106,8 +106,8 @@ SINGLE_LINE_COMMENT "//"(.)*
     return IDENTIFIER;
 }
 [\n] {
-    current_line_no = line_count;
     line_count++;
+    current_line_no = line_count;
 }
 
 "/*" { BEGIN COMMENT; }
