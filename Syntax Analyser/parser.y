@@ -1,8 +1,6 @@
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
     #include <stdbool.h>
+    #include "symbol_table.h"
     void yyerror(const char *s);
     int yylex();
 
@@ -42,184 +40,9 @@
             return stack[top];
         }
     }
-
-    // Hash function
-    int hash(char *);
-
-    // Symbol Table Defintions
-    typedef struct symbolTable {
-        char name[100];
-        char type[100];
-        char scope[100];
-        char value[100];
-        int opening_boundary_line_no;
-        int closing_boundary_line_no;
-        int length;
-        int line_no;
-    } symbolTable;
-
-    symbolTable sTable[1001];
-
-    int lookup_symbol_table(char *str){
-        int value = hash(str);
-        if (sTable[value].length == 0) {
-            return 0;
-        }
-        else if(strcmp(sTable[value].name,str) == 0) {
-            if (strcmp(sTable[value].scope, current_scope) == 0)
-                return 1;
-            return 0;
-        }
-        else {
-            for (int i=value+1;i!=value; i=(i+1)%1001){
-                if (strcmp(sTable[i].name,str) == 0) 
-                    return 1;
-            }
-            return 0;
-        }
-    }
-
-    void insert_into_symbol_table(char *symbol, char *type, 
-                                  char *scope, int line_no,
-                                  int opening_boundary_line_no) {
-        if(lookup_symbol_table(symbol)) return;
-        else {
-            int value = hash(symbol);
-            if(sTable[value].length == 0){
-                strcpy(sTable[value].name, symbol);
-                strcpy(sTable[value].type, type);
-                strcpy(sTable[value].scope, scope);
-                sTable[value].length = strlen(symbol);
-                sTable[value].line_no = line_no;
-                sTable[value].opening_boundary_line_no = opening_boundary_line_no;
-                return;
-            }
-            int pos = 0;
-
-            for (int i = value + 1 ; i!=value ; i = (i+1)%1001) {
-                if(sTable[i].length == 0){
-                    pos = i;
-                    break;
-                }
-            }
-
-            strcpy(sTable[pos].name,symbol);
-            strcpy(sTable[pos].type, type);
-            strcpy(sTable[pos].scope, scope);
-            sTable[pos].line_no = line_no;
-            sTable[pos].length = strlen(symbol);
-            sTable[pos].opening_boundary_line_no = opening_boundary_line_no;
-        }
-    }
-
-    void insert_into_symbol_table_value(char *identifier, char *value, char *scope){
-        for(int i=0;i<1001;i++){
-            if ((strcmp(sTable[i].name, identifier) == 0) 
-                    && (strcmp (sTable[i].scope, scope) == 0)
-                    && (sTable[i].value[0] == '\0')) {
-                    strcpy(sTable[i].value,value);
-                    return;
-            }
-        }
-    }
-
-    void insert_into_symbol_table_closing_line(char *scope, 
-                                               int opening_boundary_line_no,
-                                               int closing_boundary_line_no) {
-        for(int i=0;i<1001;i++){
-            if ( (strcmp (sTable[i].scope, scope) == 0)
-                    && sTable[i].opening_boundary_line_no == opening_boundary_line_no){
-                sTable[i].closing_boundary_line_no = closing_boundary_line_no;
-            }
-        }
-    }
-
-    void print_symbol_table(){
-        for(int i=0;i<1001;i++){
-            if(sTable[i].length == 0) continue;
-            printf("  %s\t\t%s\t%s\t%s\t%d-%d\t%d\n",sTable[i].name, sTable[i].type, sTable[i].scope, sTable[i].value, sTable[i].opening_boundary_line_no, sTable[i].closing_boundary_line_no, sTable[i].line_no);
-        }
-    }
-
-    // Function Table Definitions
-    typedef struct functionTable {
-        char name[40];
-        char return_type[20];
-        symbolTable arg_list[20];
-        int no_of_args;
-        int line_no;
-        int length;
-    } functionTable;
-
-    functionTable fTable[1001];
-
-    int lookup_function_table(char *str){
-        int value = hash(str);
-        if (fTable[value].length == 0) return 0;
-        else if (strcmp(fTable[value].name,str) == 0) return 1;
-        else {
-            for (int i=value+1;i!=value; i=(i+1)%1001){
-                if (strcmp(fTable[i].name,str) == 0) 
-                    return 1;
-            } 
-            return 0;
-        }
-    }
-
-    void insert_into_function_table(char *symbol, char *return_type, int line_no){
-        if(lookup_function_table(symbol)) return;
-        else {
-            int value = hash(symbol);
-            if(fTable[value].length == 0){
-                strcpy(fTable[value].name, symbol);
-                strcpy(fTable[value].return_type, return_type);
-                fTable[value].length = strlen(symbol);
-                fTable[value].line_no = line_no;
-                fTable[value].no_of_args = 0;
-                return;
-            }
-            int pos = 0;
-
-            for (int i = value + 1 ; i!=value ; i = (i+1)%1001) {
-                if(fTable[i].length == 0){
-                    pos = i;
-                    break;
-                }
-            }
-
-            strcpy(fTable[pos].name,symbol);
-            strcpy(fTable[pos].return_type, return_type);
-            fTable[pos].line_no = line_no;
-            fTable[pos].length = strlen(symbol);
-            fTable[pos].no_of_args = 0;
-        }
-    }
-
-    void insert_into_function_table_arg_list(char *function_name, char *data_type, char *identifier){
-        for(int i=0;i<1001;i++){
-            if(strcmp(fTable[i].name,function_name) == 0){
-                int j = fTable[i].no_of_args++;
-                strcpy(fTable[i].arg_list[j].name,identifier);
-                strcpy(fTable[i].arg_list[j].type,data_type);
-                strcpy(fTable[i].arg_list[j].scope,function_name);
-                fTable[i].arg_list[j].length = strlen(identifier);
-                return;
-            }
-        }
-    }
-
-    void print_function_table(){
-        for (int i=0;i<1001;i++){
-            if(fTable[i].length == 0) continue;
-            else {
-                printf ("  %s\t%s\t%d\t%d\t",fTable[i].name, fTable[i].return_type, fTable[i].line_no, fTable[i].no_of_args);
-                for(int j=0;j<fTable[i].no_of_args;j++){
-                    printf("%s %s, ",fTable[i].arg_list[j].type, fTable[i].arg_list[j].name);
-                }
-                printf("\n");
-            }
-        }
-    }
+    
+    // TODO:
+    // Function calls, arrays, char constant
 
 %}
 
@@ -376,9 +199,7 @@ postfix_expn : primary_expn
 primary_expn : IDENTIFIER   { 
         insert_into_symbol_table(current_identifier, current_data_type, current_scope, current_line_no+1, current_opening_brace_line_no); 
     }  
-             | INTEGER_CONSTANT {
-        insert_into_symbol_table_value (current_identifier, current_value, current_scope);
-    }
+             | INTEGER_CONSTANT 
              | REAL_CONSTANT 
              | STRING_CONSTANT 
              | CHAR_CONSTANT 

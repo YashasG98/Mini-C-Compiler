@@ -4,7 +4,7 @@
 int max(int a, float b) {
     int a = 10;
     if (x) {
-        float b = 9;
+        float b = (a+x);
         int y;
     }
 }

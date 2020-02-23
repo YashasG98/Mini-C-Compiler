@@ -1,129 +1,8 @@
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <limits.h>
-    #include <math.h>
-    #include <string.h>
     void yyerror(char *s);
     #include "y.tab.h"
+    #include "constant_table.h"
     int line_count = 1;
-
-    // Hash function
-    int hash(char *str){
-        unsigned int hash = 5381;
-        int c;
-        while (c=*str++)
-            hash = ((hash<<5)+hash)+c;
-        return hash%1001;
-    }
-
-    // Constant Table Definitions
-
-    typedef struct constantTable{
-        char name[100];
-        char type[100];
-        int line_no;
-        int length;
-        int integer_value;
-        double double_value;
-        char *string_value;
-        char char_value;
-    } constantTable;
-
-    constantTable cTable[1001];
-
-    int lookup_constant_table(char *str){
-        int value = hash(str);
-        if (cTable[value].length == 0) return 0;
-        else if(strcmp(cTable[value].name,str) == 0) return 1;
-        else {
-            for (int i=value+1;i!=value; i=(i+1)%1001){
-                if (strcmp(cTable[i].name,str) == 0) 
-                    return 1;
-            }
-            return 0;
-        }
-    }
-
-    void insert_into_constant_table(char *value, char *type, int type_code, int line_no){
-        if(lookup_constant_table(value)) return;
-        else {
-            int hash_value = hash(value);
-            if(cTable[hash_value].length == 0){
-                strcpy(cTable[hash_value].name, value);
-                strcpy(cTable[hash_value].type, type);
-                cTable[hash_value].length = strlen(value);
-                cTable[hash_value].line_no = line_no;
-                switch (type_code)
-                {
-                    case INTEGER_CONSTANT: cTable[hash_value].integer_value = atoi(value); 
-                                           cTable[hash_value].double_value = INFINITY;
-                                           cTable[hash_value].string_value = NULL;
-                                           break;
-                    case REAL_CONSTANT: cTable[hash_value].double_value = strtof(value,NULL); 
-                                        cTable[hash_value].integer_value = INT_MAX;
-                                        cTable[hash_value].string_value = NULL;
-                                        break;
-                    case STRING_CONSTANT:
-                        cTable[hash_value].string_value = (char *)malloc(strlen(value)*sizeof(char)); 
-                        strcpy(cTable[hash_value].string_value,value); 
-                        cTable[hash_value].integer_value = INT_MAX;
-                        cTable[hash_value].double_value = INFINITY;
-                        break;
-                    default: break;
-                }
-                return;
-            }
-            int pos = 0;
-
-            for (int i = hash_value + 1 ; i!=hash_value ; i = (i+1)%1001) {
-                if(cTable[i].length == 0){
-                    pos = i;
-                    break;
-                }
-            }
-
-            strcpy(cTable[pos].name, value);
-            strcpy(cTable[pos].type, type);
-            cTable[pos].length = strlen(value);
-            cTable[pos].line_no = line_no;
-            switch (type_code)
-            {
-                case INTEGER_CONSTANT: 
-                    cTable[pos].integer_value = atoi(value); 
-                    cTable[hash_value].double_value = INFINITY;
-                    cTable[hash_value].string_value = NULL;
-                    break;
-                case REAL_CONSTANT: 
-                    cTable[pos].double_value = strtof(value,NULL); 
-                    cTable[pos].integer_value = INT_MAX;
-                    cTable[pos].string_value = NULL;
-                    break;
-                case STRING_CONSTANT:
-                    cTable[pos].string_value = (char *)malloc(strlen(value)*sizeof(char));      
-                    strcpy(cTable[pos].string_value,value); 
-                    cTable[pos].integer_value = INT_MAX;
-                    cTable[pos].double_value = INFINITY;
-                    break;
-                default: break;
-            }
-        }
-    }
-
-    void print_constant_table(){
-        for(int i=0;i<1001;i++){
-            if(cTable[i].length == 0) continue;
-            else {
-                if(cTable[i].integer_value != INT_MAX){
-                    printf ("  %d\t\t%s\t%d\n", cTable[i].line_no, cTable[i].type, cTable[i].integer_value);
-                } else if (cTable[i].double_value != INFINITY){
-                    printf ("  %d\t\t%s\t\t%lf\n", cTable[i].line_no, cTable[i].type, cTable[i].double_value);
-                } else if (cTable[i].string_value != NULL){
-                    printf ("  %d\t\t%s\t\t%s\n", cTable[i].line_no, cTable[i].type, cTable[i].string_value);
-                }
-            }
-        }    
-    }
 
     char current_identifier[35];
     char current_scope[35];
@@ -168,12 +47,12 @@ SINGLE_LINE_COMMENT "//"(.)*
 {PRE_PROCESSOR_DIRECTIVE} {return PRE_PROCESSOR_DIRECTIVE;}
 {SINGLE_LINE_COMMENT} ;
 [-+]?{DECI} {
-    insert_into_constant_table(yytext,"INTEGER CONSTANT",INTEGER_CONSTANT,line_count);
+    insert_into_constant_table(yytext,"INTEGER CONSTANT",line_count);
     strcpy(current_value, yytext);
     return INTEGER_CONSTANT;
 }
 [-+]?{REAL} {
-    insert_into_constant_table(yytext,"REAL CONSTANT",REAL_CONSTANT,line_count);
+    insert_into_constant_table(yytext,"REAL CONSTANT",line_count);
     return REAL_CONSTANT;
 }
 [<<]|[>>] {return SHIFT_OP;}
@@ -186,7 +65,7 @@ SINGLE_LINE_COMMENT "//"(.)*
 {ADD_OP} {return ADD_OP;}
 {MUL_OP} {return MUL_OP;}
 {STRING_CONSTANT} {
-    insert_into_constant_table (yytext, "STRING_CONSTANT", STRING_CONSTANT, line_count);
+    insert_into_constant_table (yytext, "STRING_CONSTANT", line_count);
     return STRING_CONSTANT;
 }
 
