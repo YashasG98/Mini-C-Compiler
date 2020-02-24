@@ -220,8 +220,19 @@ primary_expn : IDENTIFIER   {
 // Variable Declaration
 variable_decl : data_type var_list ';' ;
 
-var_list :  var_list ',' assignment_expn 
+var_list : var_list ',' assignment_expn 
+         | var_list ',' array_init
+         | array_init 
          | assignment_expn ;
+
+array_init : IDENTIFIER {
+    insert_into_symbol_table_array_identifier(current_identifier, current_data_type, current_scope,
+                                              current_line_no, current_opening_brace_line_no);  
+} '[' array_index ']' ;
+
+array_index : IDENTIFIER | INTEGER_CONSTANT {
+    insert_into_symbol_table_array_size(current_identifier, current_value);
+};
 
 data_type : INT 
           | CHAR 
@@ -242,7 +253,7 @@ int main(){
         printf("\nSUCCESS\n");
         printf ("\n=================================================\n");
         printf ("\n\t\tSYMBOL TABLE \n\n");
-        printf ("  Symbol\tType\tScope\tBound\tLine No\n");
+        printf ("  Symbol\tType\tScope\tBound\tLine No\tArray?\tArray_size\n");
         print_symbol_table();
         printf ("\n=================================================\n");
         printf ("\n");

@@ -36,6 +36,7 @@ SINGLE_LINE_COMMENT "//"(.)*
 
 {WHITESPACES} ;
 [,;():] return *yytext;
+("[")|("]") return *yytext;
 "{" {
     current_opening_brace_line_no = line_count;
     return *yytext;

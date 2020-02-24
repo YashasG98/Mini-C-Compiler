@@ -2,9 +2,9 @@
 #include <stdlib.h>
 
 void max(int a, float b) {
-    int a = 10;
+    int p[10], q[20], i;
     if (x) {
-        float b = (a+x);
+        float b = 9.0;
     }
 }
 

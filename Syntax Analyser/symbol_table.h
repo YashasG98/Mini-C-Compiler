@@ -41,6 +41,8 @@ typedef struct symbolTable
     char scope[100];
     int opening_boundary_line_no;
     int closing_boundary_line_no;
+    int isArray;
+    int arraySize;
     int length;
     int line_no;
 } symbolTable;
@@ -103,6 +105,8 @@ void insert_into_symbol_table(char *symbol, char *data_type,
             sTable[value].length = strlen(symbol);
             sTable[value].line_no = line_no;
             sTable[value].opening_boundary_line_no = opening_boundary_line_no;
+            sTable[value].isArray = 0;
+            sTable[value].arraySize = 0;
             return;
         }
         int pos = 0;
@@ -122,6 +126,8 @@ void insert_into_symbol_table(char *symbol, char *data_type,
         sTable[pos].line_no = line_no;
         sTable[pos].length = strlen(symbol);
         sTable[pos].opening_boundary_line_no = opening_boundary_line_no;
+        sTable[pos].isArray = 0;
+        sTable[pos].arraySize = 0;
     }
 }
 
@@ -146,6 +152,56 @@ void insert_into_symbol_table_closing_line(char *scope,
     }
 }
 
+void insert_into_symbol_table_array_identifier (char *symbol, char *data_type,
+                                                char *scope, int line_no,
+                                                int opening_boundary_line_no){
+    if (lookup_symbol_table(symbol, scope))
+        return;
+    else
+    {
+        int value = hash(symbol);
+        if (sTable[value].length == 0)
+        {
+            strcpy(sTable[value].symbol_name, symbol);
+            strcpy(sTable[value].data_type, data_type);
+            strcpy(sTable[value].scope, scope);
+            sTable[value].length = strlen(symbol);
+            sTable[value].line_no = line_no;
+            sTable[value].opening_boundary_line_no = opening_boundary_line_no;
+            sTable[value].isArray = 1;
+            return;
+        }
+        int pos = 0;
+
+        for (int i = value + 1; i != value; i = (i + 1) % TABLE_SIZE)
+        {
+            if (sTable[i].length == 0)
+            {
+                pos = i;
+                break;
+            }
+        }
+
+        strcpy(sTable[pos].symbol_name, symbol);
+        strcpy(sTable[pos].data_type, data_type);
+        strcpy(sTable[pos].scope, scope);
+        sTable[pos].line_no = line_no;
+        sTable[pos].length = strlen(symbol);
+        sTable[pos].opening_boundary_line_no = opening_boundary_line_no;
+        sTable[pos].isArray = 1;
+    }
+}
+
+void insert_into_symbol_table_array_size(char *identifier, char *array_size){
+    for (int i=0;i<1001;i++){
+        if ((strcmp(sTable[i].symbol_name, identifier) == 0)
+                                  && sTable[i].isArray == 1){
+            sTable[i].arraySize = atoi(array_size);
+            return;
+        }
+    }
+
+}
 /*
 
     A utility function to print the contents of the symbol table
@@ -159,11 +215,21 @@ void print_symbol_table()
     {
         if (sTable[i].length == 0)
             continue;
-        printf("  %s\t\t%s\t%s\t%d-%d\t%d\n", sTable[i].symbol_name, sTable[i].data_type, 
+        if (sTable[i].isArray){
+            printf("  %s\t\t%s\t%s\t%d-%d\t%d\tYES\t%d\n", sTable[i].symbol_name, sTable[i].data_type, 
+                                                sTable[i].scope,
+                                                sTable[i].opening_boundary_line_no,
+                                                sTable[i].closing_boundary_line_no,
+                                                sTable[i].line_no,
+                                                sTable[i].arraySize);    
+        } else {
+            printf("  %s\t\t%s\t%s\t%d-%d\t%d\tNO\t\n", sTable[i].symbol_name, sTable[i].data_type, 
                                               sTable[i].scope,
                                               sTable[i].opening_boundary_line_no,
                                               sTable[i].closing_boundary_line_no,
                                               sTable[i].line_no);
+
+        }
     }
 }
 
