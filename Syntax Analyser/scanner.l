@@ -68,7 +68,11 @@ SINGLE_LINE_COMMENT "//"(.)*
     insert_into_constant_table (yytext, "STRING_CONSTANT", line_count);
     return STRING_CONSTANT;
 }
-
+(\'{ALPHA}\')|(\'(\\)[a-z]\') {
+    insert_into_constant_table(yytext, "CHAR_CONSTANT",line_count); 
+    return CHAR_CONSTANT;
+}
+\'(.)(.)(.)+\' {yyerror ("Illegal character constant"); return 0;} 
 "&&" {return LOG_AND;}
 "||" {return LOG_OR;}
 "main" {return MAIN;}
@@ -100,6 +104,7 @@ SINGLE_LINE_COMMENT "//"(.)*
 "default" {return DEFAULT;}
 "printf" {return PRINTF;}
 "scanf" {return SCANF;}
+"void" {return VOID;}
 
 {IDENTIFIER} {
     strcpy(current_identifier,yytext); 

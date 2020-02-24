@@ -42,8 +42,7 @@
     }
 
     // TODO:
-    // Function calls, arrays, char constant
-
+    // arrays
 %}
 
 %define parse.lac full
@@ -54,7 +53,7 @@
 %token REAL_CONSTANT INTEGER_CONSTANT STRING_CONSTANT CHAR_CONSTANT
 %token IF ELSE NOT_OP FOR WHILE DO LOG_AND LOG_OR EQUALITY_OP REL_OP SHIFT_OP
 %token ADD_OP MUL_OP ASSIGN_OP UNARY_OP RETURN BREAK DEFAULT CASE SWITCH
-%token INCREMENT_OPERATOR DECREMENT_OPERATOR PRINTF SCANF
+%token INCREMENT_OPERATOR DECREMENT_OPERATOR PRINTF SCANF VOID
 %start program
 
 %%
@@ -74,6 +73,11 @@ global_fn_decl : data_type IDENTIFIER {
         strcpy(current_scope, current_identifier);
         insert_into_function_table (current_identifier, current_data_type, current_line_no);
     } 
+    '(' argsList ')' statements 
+    | VOID IDENTIFIER {
+        strcpy (current_scope, current_identifier);
+        insert_into_function_table (current_identifier, "void", current_line_no);
+    }
     '(' argsList ')' statements ;
 
 argsList : args | ;
@@ -88,6 +92,7 @@ args : data_type IDENTIFIER  {
 
 main_fn : data_type MAIN {strcpy(current_scope, "main");} '(' ')' statements 
         | MAIN {strcpy(current_scope, "main");} '(' ')' statements           
+        | VOID MAIN {strcpy (current_scope, "main");} '(' ')' statements ;
 
 user_defined_fn_decl : user_defined_fn_decl global_fn_decl 
                      | ;
@@ -109,7 +114,14 @@ statements : compound_statement
            | labelled_statement 
            | return_statement
            | break_statement  
-           | io_statements;
+           | io_statements
+           | function_call ;
+
+function_call : IDENTIFIER '(' fn_args ')' ';'
+
+fn_args : | fn_arg ;
+
+fn_arg : fn_arg ',' IDENTIFIER | IDENTIFIER ;
 
 io_statements : printf_statement 
               | scanf_statement ;
@@ -230,7 +242,7 @@ int main(){
         printf("\nSUCCESS\n");
         printf ("\n=================================================\n");
         printf ("\n\t\tSYMBOL TABLE \n\n");
-        printf ("  Symbol\tType\tScope\tValue\tBound\tLine No\n");
+        printf ("  Symbol\tType\tScope\tBound\tLine No\n");
         print_symbol_table();
         printf ("\n=================================================\n");
         printf ("\n");

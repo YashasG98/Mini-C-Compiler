@@ -1,15 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int max(int a, float b) {
+void max(int a, float b) {
     int a = 10;
     if (x) {
         float b = (a+x);
-        int y;
     }
 }
 
-int main() {
+void main() {
     int c;
     do {
         int d;

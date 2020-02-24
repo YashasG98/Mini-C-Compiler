@@ -79,7 +79,8 @@ extern int yydebug;
     INCREMENT_OPERATOR = 289,
     DECREMENT_OPERATOR = 290,
     PRINTF = 291,
-    SCANF = 292
+    SCANF = 292,
+    VOID = 293
   };
 #endif
 /* Tokens.  */
@@ -118,6 +119,7 @@ extern int yydebug;
 #define DECREMENT_OPERATOR 290
 #define PRINTF 291
 #define SCANF 292
+#define VOID 293
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
