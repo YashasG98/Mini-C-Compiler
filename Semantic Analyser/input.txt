@@ -7,6 +7,8 @@ int max(int a, int b) {
 }
 
 void main() {
-    int a, b;
-    max(a,b);
+    int a;
+    int b;
+    b = b + 1;
+    max (a,b);
 }

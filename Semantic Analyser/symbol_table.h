@@ -175,6 +175,7 @@ char *data_type_of_symbol(char *symbol, char *scope){
             return sTable[i].data_type;
         }
     }
+    return NULL;
 }
 
 /*

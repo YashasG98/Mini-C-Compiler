@@ -119,6 +119,7 @@ local_decl statement_list {
         if (lookup_symbol_table(sym.symbol_name, sym.scope) == 0) {
             error ("Undeclared Variable", sym.line_no);
         }
+        stack_top--;
     }
 } '}' {
     if (peek() != -1) {
@@ -229,52 +230,129 @@ for_loop : FOR '(' expn1 ';' expn1 ';' expn1 ')' statements
 expn1 : expn | ;
 
 // Expression hierarchy
-expn : assignment_expn 
-     | expn ',' assignment_expn ;
+expn : assignment_expn { $$ = $1; }
+     | expn ',' assignment_expn { 
+        if (($1 == $3) && ($1 != -1)){
+            $$ = $1;
+        } else {
+            yyerror ("Invalid Expression");
+        }
+     } ;
 
-assignment_expn : cond_exp 
-                | unary_expn ASSIGN_OP assignment_expn ;
+assignment_expn : cond_exp { $$ = $1; }
+                | unary_expn ASSIGN_OP assignment_expn {
+                    if (($1 == $3) && ($1 != -1)) {
+                        $$ = $1;
+                    } else if ($1 != $3){
+                        yyerror ("Type Mismatch");
+                    } else if ($1 == -1) {
+                        yyerror ("Invalid String Assignment");
+                    }
+                };
 
-cond_exp : logical_or_expn ;
+cond_exp : logical_or_expn { $$ = $1; } ;
 
-logical_or_expn : logical_and_expn
-                | logical_or_expn LOG_OR logical_and_expn ;
+logical_or_expn : logical_and_expn { $$ = $1; }
+                | logical_or_expn LOG_OR logical_and_expn {
+                    if (($1 == $3) && ($1 != -1)) {
+                        $$ = $1;
+                    } else {
+                        yyerror ("Invalid Logical OR Expression");
+                    }
+                };
 
-logical_and_expn : equality_expn
-                 | logical_and_expn LOG_AND equality_expn ;
+logical_and_expn : equality_expn { $$ = $1; }
+                 | logical_and_expn LOG_AND equality_expn {
+                    if (($1 == $3) && ($1 != -1)) {
+                        $$ = $1;
+                    } else {
+                        yyerror ("Invalid Logical AND Expression");
+                    }
+                 };
 
-equality_expn : relational_expn 
-              | equality_expn EQUALITY_OP relational_expn ;
+equality_expn : relational_expn { $$ = $1; }
+              | equality_expn EQUALITY_OP relational_expn {
+                    if (($1 == $3) && ($1 != -1)) {
+                        $$ = $1;
+                    } else {
+                        yyerror ("Invalid Equality Expression");
+                    }
+              };
 
-relational_expn : shift_expn 
-                | relational_expn REL_OP shift_expn ;
+relational_expn : shift_expn { $$ = $1; }
+                | relational_expn REL_OP shift_expn {
+                    if (($1 == $3) && ($1 != -1)) {
+                        $$ = $1;
+                    } else {
+                        yyerror ("Invalid Relational Expression");
+                    }
+                };
 
-shift_expn : additive_expn 
-           | shift_expn SHIFT_OP additive_expn ;
+shift_expn : additive_expn { $$ = $1; }
+            | shift_expn SHIFT_OP additive_expn {
+                switch ($1 + $3) {
+                    case 2 : $$ = 1; break;
+                    case 1 : $$ = 0; break;
+                    case 0 : ($1 == $3) ? $$ = 0 : yyerror ("Invalid String operations"); 
+                                break;
+                    case -1 :
+                    case -2 : yyerror ("Invalid String operations"); 
+                }
+            };
 
-additive_expn : multiplicative_expn 
-              | additive_expn ADD_OP multiplicative_expn ;
+additive_expn : multiplicative_expn { $$ = $1; }
+              | additive_expn ADD_OP multiplicative_expn {
+                    switch ($1 + $3) {
+                        case 2 : $$ = 1; break;
+                        case 1 : $$ = 0; break;
+                        case 0 : ($1 == $3) ? $$ = 0 : yyerror ("Invalid String operations"); 
+                                    break;
+                        case -1 :
+                        case -2 : yyerror ("Invalid String operations"); 
+                    }
+              };
 
-multiplicative_expn : unary_expn 
-                    | multiplicative_expn MUL_OP unary_expn ;
+multiplicative_expn : unary_expn { $$ = $1; }
+                    | multiplicative_expn MUL_OP unary_expn { 
+                        switch ($1 + $3) {
+                            case 2 : $$ = 1; break;
+                            case 1 : $$ = 0; break;
+                            case 0 : ($1 == $3) ? $$ = 0 : yyerror ("Invalid String operations"); 
+                                        break;
+                            case -1 :
+                            case -2 : yyerror ("Invalid String operations"); 
+                        }
+                    };
 
-unary_expn : postfix_expn 
-           | INCREMENT_OPERATOR unary_expn 
-           | DECREMENT_OPERATOR unary_expn 
-           | UNARY_OP postfix_expn ;
+unary_expn : postfix_expn { $$ = $1; }
+           | INCREMENT_OPERATOR unary_expn { $$ = $2; }
+           | DECREMENT_OPERATOR unary_expn { $$ = $2; }
+           | UNARY_OP postfix_expn { $$ = $2; };
 
-postfix_expn : primary_expn 
-             | postfix_expn INCREMENT_OPERATOR 
-             | postfix_expn DECREMENT_OPERATOR ;
+postfix_expn : primary_expn { $$ = $1; }
+             | postfix_expn INCREMENT_OPERATOR { $$ = $1; }
+             | postfix_expn DECREMENT_OPERATOR { $$ = $1; };
 
 primary_expn : IDENTIFIER   { 
         push_symbol(current_identifier, current_data_type, current_scope, current_line_no, current_opening_brace_line_no, 0); 
+        char *symbol_data_type = (char *)calloc(20,sizeof(char));
+        symbol_data_type = data_type_of_symbol(current_identifier, current_scope);
+        if (symbol_data_type != NULL) {
+            if ((strcmp(symbol_data_type, "int")==0) || (strcmp(symbol_data_type, "char")==0)){
+                $$ = 1;
+            } 
+            else if ((strcmp(symbol_data_type, "float")==0) || (strcmp(symbol_data_type, "double")==0)) {
+                $$ = 0;
+            } else {
+                $$ = -1;
+            }
+        }
     }  
-             | INTEGER_CONSTANT 
-             | REAL_CONSTANT 
-             | STRING_CONSTANT 
-             | CHAR_CONSTANT 
-             | '(' expn ')' ;
+             | INTEGER_CONSTANT { $$ = 1; }
+             | REAL_CONSTANT { $$ = 0; }
+             | STRING_CONSTANT { $$ = -1; }
+             | CHAR_CONSTANT { $$ = 1; }
+             | '(' expn ')' { $$ = $2; };
 
 // Variable Declaration
 variable_decl : data_type var_list {
