@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int x(int a, int b) {
+    a = b + 2;
+    return a;
+}
+
+void main() {
+    int a, b;
+    a+=1;
+    x(a,b);
+}
