@@ -3,7 +3,7 @@
 
 int x(int a, int b) {
     a = b + 2;
-    return a;
+    return a+b;
 }
 
 void main() {

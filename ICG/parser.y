@@ -329,7 +329,7 @@ statement_list : statement_list statements
                | ;
 
 expn_statement : expn { isExpn = true; }';' 
-               | ';' ;
+               | { isExpn = false; } ';' ;
 
 return_statement : RETURN { isReturn = true; } expn_statement 
 {
@@ -338,6 +338,13 @@ return_statement : RETURN { isReturn = true; } expn_statement
     } else if (isReturn && !isExpn && current_return_type[0]!='v') {
         yyerror("Non-void function returning a void value");
     }
+    if (current_return_type[0] != 'v') {
+        printf ("return %s\n", icg_symbol_stack[icg_symbol_stack_top].value);
+        icg_symbol_stack_top--;    
+    } else {
+        printf ("return\n");
+    }
+
 };
 
 break_statement : BREAK ';' ;
